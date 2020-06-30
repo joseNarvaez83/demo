@@ -6,7 +6,7 @@ RUN mvn package
 
 FROM openjdk:11-jre-slim as builder2
 WORKDIR application
-COPY --from=builder1 /tmp/target/*.jar ./target
+COPY --from=builder1 /tmp/target/*.jar target/
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
