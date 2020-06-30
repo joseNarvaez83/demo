@@ -1,0 +1,22 @@
+version: '3.2'
+
+services:
+  db:
+    image: mysql:8.0.13
+    ports:
+      - 3306:3306
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ~/dev/docker/mysql-data-demo:/var/lib/mysql
+
+  app:
+    image: josenarvaez/demo
+    ports:
+      - 80:8080
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/demoservice?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    depends_on:
+      - db
