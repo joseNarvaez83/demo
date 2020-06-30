@@ -1,0 +1,23 @@
+FROM maven:3.6.3-jdk-11-slim as builder1
+COPY pom.xml /tmp/
+COPY src /tmp/src/
+WORKDIR /tmp/
+RUN mvn package
+
+FROM openjdk:11-jre-slim as builder2
+WORKDIR application
+COPY --from=builder1 /tmp/target/*.jar ./target
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} application.jar
+RUN java -Djarmode=layertools -jar application.jar extract
+
+LABEL PROJECT_NAME=demo \
+      PROJECT=demo
+
+FROM openjdk:11-jre-slim
+WORKDIR application
+COPY --from=builder2 application/dependencies/ ./
+COPY --from=builder2 application/spring-boot-loader/ ./
+COPY --from=builder2 application/snapshot-dependencies/ ./
+COPY --from=builder2 application/application/ ./
+ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
