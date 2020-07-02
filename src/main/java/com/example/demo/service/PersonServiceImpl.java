@@ -4,8 +4,11 @@ import com.example.demo.model.Person;
 import com.example.demo.repository.PersonRepository;
 import com.example.demo.web.mappers.PersonMapper;
 import com.example.demo.web.model.PersonDto;
+import com.example.demo.web.model.PersonPagedList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,9 +23,33 @@ public class PersonServiceImpl implements PersonService {
     private final PersonMapper personMapper;
 
     @Override
-    public List<PersonDto> getAll() {
-        return personRepository.findAll().stream()
+    public PersonPagedList getAll(PageRequest pageRequest) {
+
+        PersonPagedList pagedList;
+        Page<Person> personPage;
+
+        personPage = personRepository.findAll(pageRequest);
+
+        pagedList = new PersonPagedList(
+                personPage.getContent().stream()
                 .map(personMapper::personToPersonDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()),
+                PageRequest
+                    .of(personPage.getPageable().getPageNumber(),
+                            personPage.getPageable().getPageSize()),
+                personPage.getTotalElements()
+        );
+
+        return pagedList;
+    }
+
+    @Override
+    public PersonDto savePerson(PersonDto personDto) {
+        return personMapper
+                .personToPersonDto(
+                        personRepository.save(
+                                personMapper.personDtoToPerson(personDto)
+                        )
+                );
     }
 }
